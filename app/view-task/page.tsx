@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import styles from './view-task.module.css';
 
@@ -120,5 +120,12 @@ const TaskDetails: React.FC = () => {
   );
 };
 
-export default TaskDetails;
+// Wrap TaskDetails in Suspense for useSearchParams
+export default function ViewTaskPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TaskDetails />
+    </Suspense>
+  );
+}
 
