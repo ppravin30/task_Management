@@ -4,7 +4,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import styles from './view-task.module.css';
 
 interface Task {
-  task: string;
+  id: number;
+  name: string;
   dueDate: string;
   category: string;
 }
@@ -12,30 +13,38 @@ interface Task {
 const TaskDetails: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const index = Number(searchParams.get('index'));
+  const id = Number(searchParams.get('id'));
 
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [task, setTask] = useState<Task | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState<Task>({
-    task: '',
+  const [editData, setEditData] = useState<Omit<Task, 'id'>>({
+    name: '',
     dueDate: '',
     category: '',
   });
+  const [loading, setLoading] = useState(true);
 
+  // Fetch task from database
   useEffect(() => {
-    const stored = localStorage.getItem('tasks');
-    const parsed: Task[] = stored ? JSON.parse(stored) : [];
-    setTasks(parsed);
-    if (parsed[index]) {
-      setTask(parsed[index]);
-      setEditData(parsed[index]);
-    }
-  }, [index]);
+    if (!id) return;
+    setLoading(true);
+    fetch(`/api/tasks/${id}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) {
+          setTask(data);
+          setEditData({
+            name: data.name,
+            dueDate: data.dueDate.slice(0, 10),
+            category: data.category,
+          });
+        }
+        setLoading(false);
+      });
+  }, [id]);
 
-  const handleDelete = () => {
-    const updated = tasks.filter((_, i) => i !== index);
-    localStorage.setItem('tasks', JSON.stringify(updated));
+  const handleDelete = async () => {
+    await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
     router.push('/');
   };
 
@@ -47,15 +56,21 @@ const TaskDetails: React.FC = () => {
     }));
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const updatedTasks = tasks.map((t, i) => (i === index ? editData : t));
-    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-    setTasks(updatedTasks);
-    setTask(editData);
-    setIsEditing(false);
+    const res = await fetch(`/api/tasks/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editData),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setTask(updated);
+      setIsEditing(false);
+    }
   };
 
+  if (loading) return <div className={styles.notFound}>Loading...</div>;
   if (!task) return <div className={styles.notFound}>Task not found.</div>;
 
   return (
@@ -68,8 +83,8 @@ const TaskDetails: React.FC = () => {
             <input
               className={styles.input}
               type="text"
-              name="task"
-              value={editData.task}
+              name="name"
+              value={editData.name}
               onChange={handleEditChange}
               required
             />
@@ -107,8 +122,8 @@ const TaskDetails: React.FC = () => {
         </form>
       ) : (
         <div className={styles.details}>
-          <p><strong>Task:</strong> {task.task}</p>
-          <p><strong>Due Date:</strong> {task.dueDate}</p>
+          <p><strong>Task:</strong> {task.name}</p>
+          <p><strong>Due Date:</strong> {task.dueDate.slice(0, 10)}</p>
           <p><strong>Category:</strong> {task.category}</p>
           <div className={styles.actions}>
             <button className={styles.editButton} onClick={() => setIsEditing(true)}>Edit</button>
@@ -128,4 +143,3 @@ export default function ViewTaskPage() {
     </Suspense>
   );
 }
-

@@ -3,45 +3,50 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './tasklist.module.css';
 
-interface TaskFormData {
-  task: string;
+interface Task {
+  id: number;
+  name: string;
   dueDate: string;
   category: string;
 }
 
 const TaskList: React.FC = () => {
-  const [tasks, setTasks] = useState<TaskFormData[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Fetch tasks from the database via API
   useEffect(() => {
-    const fetchTasks = () => {
-      const stored = localStorage.getItem('tasks');
-      setTasks(stored ? JSON.parse(stored) : []);
+    const fetchTasks = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/tasks', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          setTasks(data);
+        } else {
+          setTasks([]);
+        }
+      } catch {
+        setTasks([]);
+      }
+      setLoading(false);
     };
     fetchTasks();
-
-    // Listen for storage changes (other tabs/windows)
-    const onStorage = () => fetchTasks();
-    window.addEventListener('storage', onStorage);
-
-    // Optionally, reload when page regains focus
-    window.addEventListener('focus', fetchTasks);
-
-    return () => {
-      window.removeEventListener('storage', onStorage);
-      window.removeEventListener('focus', fetchTasks);
-    };
   }, []);
 
-  const handleView = (idx: number) => {
-    router.push(`/view-task?index=${idx}`);
+  const handleView = (id: number) => {
+    router.push(`/view-task?id=${id}`);
   };
 
-  const handleDelete = (idx: number) => {
-    const updatedTasks = tasks.filter((_, i) => i !== idx);
-    setTasks(updatedTasks);
-    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+  const handleDelete = async (id: number) => {
+    await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+    setTasks(tasks => tasks.filter(task => task.id !== id));
   };
+
+  if (loading) {
+    return <p className={styles.empty}>Loading...</p>;
+  }
 
   if (tasks.length === 0) {
     return <p className={styles.empty}>No tasks yet.</p>;
@@ -51,22 +56,22 @@ const TaskList: React.FC = () => {
     <div className={styles.container}>
       <h2 className={styles.heading}>Task List</h2>
       <ul className={styles.list}>
-        {tasks.map((task, idx) => (
-          <li className={styles.listItem} key={idx}>
-            <span className={styles.task}>{task.task}</span>
-            <span className={styles.dueDate}>{task.dueDate}</span>
+        {tasks.map((task) => (
+          <li className={styles.listItem} key={task.id}>
+            <span className={styles.task}>{task.name}</span>
+            <span className={styles.dueDate}>{task.dueDate.slice(0, 10)}</span>
             <span className={styles.category}>{task.category}</span>
             <div className={styles.actions}>
               <button
                 className={styles.viewButton}
-                onClick={() => handleView(idx)}
+                onClick={() => handleView(task.id)}
                 type="button"
               >
                 View
               </button>
               <button
                 className={styles.deleteButton}
-                onClick={() => handleDelete(idx)}
+                onClick={() => handleDelete(task.id)}
                 type="button"
               >
                 Delete

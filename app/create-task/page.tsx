@@ -15,6 +15,8 @@ const CreateTaskPage: React.FC = () => {
     dueDate: '',
     category: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -25,20 +27,28 @@ const CreateTaskPage: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Get existing tasks
-    const existing = JSON.parse(localStorage.getItem('tasks') || '[]');
-    // Add new task
-    const updated = [...existing, formData];
-    localStorage.setItem('tasks', JSON.stringify(updated));
-    setFormData({
-      task: '',
-      dueDate: '',
-      category: '',
-    });
-    // Redirect to home page
-    router.push('/');
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || 'Failed to add task');
+        setLoading(false);
+        return;
+      }
+      setFormData({ task: '', dueDate: '', category: '' });
+      router.push('/');
+    } catch (err) {
+      setError('Failed to add task');
+      setLoading(false);
+    }
   };
 
   return (
@@ -80,8 +90,9 @@ const CreateTaskPage: React.FC = () => {
           <option value="Urgent">Urgent</option>
         </select>
       </div>
-      <button className={styles.submitButton} type="submit">
-        Add Task
+      {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
+      <button className={styles.submitButton} type="submit" disabled={loading}>
+        {loading ? 'Adding...' : 'Add Task'}
       </button>
     </form>
   );
