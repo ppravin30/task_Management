@@ -16,12 +16,12 @@ export default function Home() {
           <li className="mb-2 tracking-[-.01em]">
             Get started by editing{" "}
             <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx test tet test
+              app/page.tsx test tet test dsdsd
             </code>
             .
           </li>
           <li className="tracking-[-.01em]">
-            Save and see your changes instantly. test test test 
+            Save and see your changes instantly. test test test vdvd fdfd
           </li>
         </ol>
 
