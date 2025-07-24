@@ -1,6 +1,8 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import LoadingSpinner from './Loading';
+
 
 interface Task {
   id: number;
@@ -15,6 +17,12 @@ const TaskList: React.FC = () => {
   const [error, setError] = useState('');
   const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+// Get filter values from URL
+  const categoryFilter = searchParams.get('category') || '';
+  const dateFilter = searchParams.get('due') || '';
+  const searchFilter = searchParams.get('search') || '';
 
   // Fetch tasks from the database via API
   useEffect(() => {
@@ -39,6 +47,44 @@ const TaskList: React.FC = () => {
     };
     fetchTasks();
   }, []);
+
+
+  // Filter tasks based on search parameters
+  const filteredTasks = tasks.filter(task => {
+    // Category filter
+    if (categoryFilter && task.category !== categoryFilter) {
+      return false;
+    }
+
+    // Date filter
+    if (dateFilter) {
+      const today = new Date();
+      const dueDate = new Date(task.dueDate);
+      
+      switch (dateFilter) {
+        case 'today':
+          if (dueDate.toDateString() !== today.toDateString()) return false;
+          break;
+        case 'week':
+          const weekFromNow = new Date(today);
+          weekFromNow.setDate(today.getDate() + 7);
+          if (dueDate > weekFromNow || dueDate < today) return false;
+          break;
+        case 'month':
+          const monthFromNow = new Date(today);
+          monthFromNow.setMonth(today.getMonth() + 1);
+          if (dueDate > monthFromNow || dueDate < today) return false;
+          break;
+      }
+    }
+
+    // Search filter
+    if (searchFilter && !task.name.toLowerCase().includes(searchFilter.toLowerCase())) {
+      return false;
+    }
+
+    return true;
+  });
 
   const handleView = (id: number) => {
     router.push(`/view-task?id=${id}`);
@@ -88,14 +134,10 @@ const TaskList: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
-        <span className="ml-2 text-gray-600 dark:text-gray-300">Loading tasks...</span>
-      </div>
-    );
-  }
+const renderContent = () => {
+    if (loading) {
+      return <LoadingSpinner />;
+    }
 
   if (error) {
     return (
@@ -130,49 +172,79 @@ const TaskList: React.FC = () => {
     <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Your Tasks</h2>
-        <span className="text-sm text-gray-500 dark:text-gray-400">{tasks.length} task{tasks.length !== 1 ? 's' : ''}</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">{tasks.length} task{tasks.length !== 1 ? 's' : ''}
+          {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''}
+          {(categoryFilter || dateFilter || searchFilter) && ' (filtered)'}
+        </span>
       </div>
-      
-      <div className="space-y-4">
-        {tasks.map((task) => (
-          <div key={task.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-4 hover:shadow-lg dark:hover:shadow-xl transition-all duration-200">
-            <div className="flex items-start justify-between">
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 truncate">
-                  {task.name}
-                </h3>
-                <div className="flex items-center space-x-4 mb-3">
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <span className="mr-1">📅</span>
-                    {formatDate(task.dueDate)}
+
+      {filteredTasks.length === 0 && (tasks.length > 0) ? (
+        <div className="text-center py-12">
+          <div className="text-gray-500 dark:text-gray-400 mb-4">No tasks match your filters</div>
+          <button 
+            onClick={() => router.push('/')}
+            className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
+          >
+            Clear Filters
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredTasks.map((task) => (
+            <div key={task.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-4 hover:shadow-lg dark:hover:shadow-xl transition-all duration-200">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 truncate">
+                    {task.name}
+                  </h3>
+                  <div className="flex items-center space-x-4 mb-3">
+                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                      <span className="mr-1">📅</span>
+                      {formatDate(task.dueDate)}
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(task.category)}`}>
+                      {task.category}
+                    </span>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(task.category)}`}>
-                    {task.category}
-                  </span>
+                </div>
+                
+                <div className="flex space-x-2 ml-4">
+                  <button
+                    onClick={() => handleView(task.id)}
+                    className="px-3 py-1 text-sm bg-blue-600 dark:bg-blue-500 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
+                  >
+                    View
+                  </button>
+                  <button
+                    onClick={() => handleDelete(task.id)}
+                    disabled={deletingIds.has(task.id)}
+                    className="px-3 py-1 text-sm bg-red-600 dark:bg-red-500 text-white rounded hover:bg-red-700 dark:hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {deletingIds.has(task.id) ? 'Deleting...' : 'Delete'}
+                  </button>
                 </div>
               </div>
-              
-              <div className="flex space-x-2 ml-4">
-                <button
-                  onClick={() => handleView(task.id)}
-                  className="px-3 py-1 text-sm bg-blue-600 dark:bg-blue-500 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
-                >
-                  View
-                </button>
-                <button
-                  onClick={() => handleDelete(task.id)}
-                  disabled={deletingIds.has(task.id)}
-                  className="px-3 py-1 text-sm bg-red-600 dark:bg-red-500 text-white rounded hover:bg-red-700 dark:hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {deletingIds.has(task.id) ? 'Deleting...' : 'Delete'}
-                </button>
-              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
+
+return (
+    <div className="max-w-4xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Your Tasks</h2>
+        <span className="text-sm text-gray-500 dark:text-gray-400">
+          {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''}
+          {(categoryFilter || dateFilter || searchFilter) && ' (filtered)'}
+        </span>
+      </div>
+      {renderContent()}
+    </div>
+  );
+};
+
 
 export default TaskList;

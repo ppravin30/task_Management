@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import TaskList from "@/components/TaskList";
+import TaskFilters from "@/components/TaskFilters"
 
 export default function Home() {
   return (
@@ -11,7 +13,12 @@ export default function Home() {
           Organize your tasks efficiently and stay productive
         </p>
       </div>
-      <TaskList />
+      <Suspense fallback={<div>Loading filters...</div>}>
+        <TaskFilters />
+      </Suspense>
+      <Suspense fallback={<div>Loading tasks...</div>}>
+        <TaskList />
+      </Suspense>
     </main>
   );
 }
