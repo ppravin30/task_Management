@@ -169,14 +169,16 @@ const renderContent = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+     <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Your Tasks</h2>
-        <span className="text-sm text-gray-500 dark:text-gray-400">{tasks.length} task{tasks.length !== 1 ? 's' : ''}
-          {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''}
-          {(categoryFilter || dateFilter || searchFilter) && ' (filtered)'}
-        </span>
-      </div>
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Your Tasks</h2>
+      <span className="text-sm text-gray-500 dark:text-gray-400">
+        {(categoryFilter || dateFilter || searchFilter) 
+          ? `Filtered: ${filteredTasks.length} ${filteredTasks.length === 1 ? 'task' : 'tasks'} from ${tasks.length} total`
+          : `${tasks.length} ${tasks.length === 1 ? 'task' : 'tasks'}`
+        }
+      </span>
+    </div>
 
       {filteredTasks.length === 0 && (tasks.length > 0) ? (
         <div className="text-center py-12">
@@ -233,15 +235,9 @@ const renderContent = () => {
 };
 
 return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <span className="text-sm text-gray-500 dark:text-gray-400">
-          {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''}
-          {(categoryFilter || dateFilter || searchFilter) && ' (filtered)'}
-        </span>
-      </div>
-      {renderContent()}
-    </div>
+  <div className="max-w-4xl mx-auto">
+    {renderContent()}
+  </div>
   );
 };
 
