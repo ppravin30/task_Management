@@ -1,8 +1,19 @@
+// app/page.tsx or wherever your home page is
 import { Suspense } from 'react';
 import TaskList from "@/components/TaskList";
-import TaskFilters from "@/components/TaskFilters"
+import TaskFilters from "@/components/TaskFilters";
+import { getCurrentUser } from "@/lib/auth/getCurrentUser";
+import { redirect } from 'next/navigation';
 
-export default function Home() {
+export default async function Home() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect('/sign-in'); // or your sign-in page route
+  }
+
+
+
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="text-center mb-8">
@@ -19,12 +30,14 @@ export default function Home() {
           <TaskFilters />
         </Suspense>
         <Suspense fallback={<div>Loading tasks...</div>}>
-          <TaskList />
+          <TaskList userId={user.id} /> {/* optionally pass userId to filter */}
         </Suspense>
       </div>
     </main>
   );
-}
+};
+
+
 
 
 
