@@ -30,7 +30,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (mounted) {
+    
       localStorage.setItem('theme', theme);
       
       // Apply theme to document
@@ -39,7 +39,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       } else {
         document.documentElement.classList.remove('dark');
       }
-    }
+    
   }, [theme, mounted]);
 
   const toggleTheme = () => {
@@ -48,7 +48,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Prevent hydration mismatch
   if (!mounted) {
-    return <div className="min-h-screen bg-gray-50">{children}</div>;
+    return null;
   }
 
   return (
