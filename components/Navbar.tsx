@@ -38,6 +38,16 @@ const Navbar = () => {
             >
               + Create Task
             </Link>
+            <Link
+              href="/user"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                pathname === '/user'
+                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
+              >
+                User
+              </Link>
             <ThemeToggle />
           </div>
         </div>
