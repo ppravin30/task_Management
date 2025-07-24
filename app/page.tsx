@@ -13,12 +13,15 @@ export default function Home() {
           Organize your tasks efficiently and stay productive
         </p>
       </div>
-      <Suspense fallback={<div>Loading filters...</div>}>
-        <TaskFilters />
-      </Suspense>
-      <Suspense fallback={<div>Loading tasks...</div>}>
-        <TaskList />
-      </Suspense>
+      <div className="max-w-4xl mx-auto">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Your Tasks</h2>
+        <Suspense fallback={<div>Loading filters...</div>}>
+          <TaskFilters />
+        </Suspense>
+        <Suspense fallback={<div>Loading tasks...</div>}>
+          <TaskList />
+        </Suspense>
+      </div>
     </main>
   );
 }

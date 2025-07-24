@@ -235,7 +235,6 @@ const renderContent = () => {
 return (
     <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Your Tasks</h2>
         <span className="text-sm text-gray-500 dark:text-gray-400">
           {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''}
           {(categoryFilter || dateFilter || searchFilter) && ' (filtered)'}
