@@ -22,8 +22,8 @@ export default function TaskFilters() {
 
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Category Filter */}
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
               Category
@@ -40,6 +40,7 @@ export default function TaskFilters() {
             </select>
           </div>
 
+          {/* Due Date Filter */}
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
               Due Date
@@ -56,6 +57,7 @@ export default function TaskFilters() {
             </select>
           </div>
 
+          {/* Search Filter */}
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
               Search
@@ -70,11 +72,13 @@ export default function TaskFilters() {
           </div>
         </div>
         
+        {/* Clear Filters Button - Aligned with filters */}
+        <div className="flex items-end">
         {(searchParams.get('category') || searchParams.get('due') || searchParams.get('search')) && (
           <button
             onClick={clearAllFilters}
-            className="ml-4 px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
-          >
+              className="w-full p-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+        >
             Clear all filters
           </button>
         )}
